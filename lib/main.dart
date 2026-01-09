@@ -39,6 +39,11 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void removeFavorite(WordPair pair) {
+    favorites.remove(pair);
+    notifyListeners();
+  }
+
   void generate() {
     current = WordPair.random();
     notifyListeners();
@@ -61,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
         page = GeneratorPage();
         break;
       case 1:
-        page = Placeholder();
+        page = FavoritePage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -100,6 +105,75 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class FavoritePage extends StatelessWidget {
+  const FavoritePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = context.watch<MyAppState>();
+    final favorites = appState.favorites;
+    final theme = Theme.of(context);
+
+    if (favorites.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.favorite_border,
+              size: 64,
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No favorites yet',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.all(16),
+      itemCount: favorites.length,
+      itemBuilder: (context, index) {
+        final pair = favorites[index];
+        return Padding(
+          padding: EdgeInsets.only(bottom: 8),
+          child: Card(
+            elevation: 1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+              ),
+            ),
+            child: ListTile(
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              leading: Icon(Icons.favorite, color: theme.colorScheme.primary),
+              subtitle: Text(
+                '${pair.first}${pair.second}',
+                style: theme.textTheme.titleMedium,
+              ),
+              title: Text("#${favorites.indexOf(pair) + 1}"),
+              trailing: IconButton(
+                onPressed: () {
+                  appState.removeFavorite(pair);
+                },
+                icon: Icon(Icons.delete_outline),
+                color: theme.colorScheme.error,
+              ),
+            ),
           ),
         );
       },
